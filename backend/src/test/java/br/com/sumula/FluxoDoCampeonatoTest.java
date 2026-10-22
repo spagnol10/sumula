@@ -3,33 +3,16 @@ package br.com.sumula;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
-import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 /** Fluxo completo da Fase 1 contra um Postgres real (Testcontainers). */
-@Import(TestcontainersConfiguration.class)
-@SpringBootTest
-@AutoConfigureMockMvc
-class FluxoDoCampeonatoTest {
-
-	@Autowired
-	MockMvcTester mvc;
-
-	/** Chave enviada nas requisições de escrita; cada teste define a sua. */
-	private String chave;
+class FluxoDoCampeonatoTest extends TesteDeApi {
 
 	@Test
 	void doCadastroAClassificacao() throws Exception {
@@ -124,24 +107,6 @@ class FluxoDoCampeonatoTest {
 			.bodyJson().extractingPath("$.detail").asString().startsWith("Corpo da requisição inválido");
 		assertThat(get("/api/v1/campeonatos/" + UUID.randomUUID())).hasStatus(HttpStatus.NOT_FOUND)
 			.bodyJson().extractingPath("$.detail").asString().contains("Campeonato");
-	}
-
-	private MvcTestResult get(String uri) {
-		return mvc.get().uri(uri).exchange();
-	}
-
-	private MvcTestResult post(String uri, String json) {
-		var req = mvc.post().uri(uri).contentType(MediaType.APPLICATION_JSON).content(json);
-		return (chave == null ? req : req.header("X-Chave-Organizador", chave)).exchange();
-	}
-
-	private MvcTestResult put(String uri, String json) {
-		var req = mvc.put().uri(uri).contentType(MediaType.APPLICATION_JSON).content(json);
-		return (chave == null ? req : req.header("X-Chave-Organizador", chave)).exchange();
-	}
-
-	private static String ler(MvcTestResult resultado, String caminho) throws Exception {
-		return JsonPath.read(resultado.getResponse().getContentAsString(StandardCharsets.UTF_8), caminho);
 	}
 
 }

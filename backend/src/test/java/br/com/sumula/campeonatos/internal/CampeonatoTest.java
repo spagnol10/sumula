@@ -60,6 +60,24 @@ class CampeonatoTest {
 	}
 
 	@Test
+	void inscreveJogadoresComNumeroUnicoPorTime() {
+		Time vila = campeonato.inscrever("Unidos da Vila");
+		Time morro = campeonato.inscrever("Juventude do Morro");
+
+		campeonato.inscreverJogador(vila.getId(), " Zé ", 10);
+		campeonato.inscreverJogador(vila.getId(), "Sem número", null);
+		campeonato.inscreverJogador(vila.getId(), "Outro sem número", null);
+		campeonato.inscreverJogador(morro.getId(), "Bruno", 10); // mesmo número, outro time
+
+		assertThat(vila.getJogadores()).extracting(Jogador::getNome).containsExactly("Zé", "Sem número", "Outro sem número");
+		assertThatThrownBy(() -> campeonato.inscreverJogador(vila.getId(), "Repetido", 10))
+			.isInstanceOf(RegraDeNegocioException.class)
+			.hasMessageContaining("número 10");
+		assertThatThrownBy(() -> campeonato.inscreverJogador(java.util.UUID.randomUUID(), "X", null))
+			.isInstanceOf(br.com.sumula.compartilhado.RecursoNaoEncontradoException.class);
+	}
+
+	@Test
 	void limitaQuantidadeDeTimes() {
 		for (int i = 0; i < Campeonato.MAXIMO_DE_TIMES; i++) {
 			campeonato.inscrever("Time " + i);

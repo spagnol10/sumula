@@ -11,3 +11,4 @@ Um ADR aceito não é editado: se a decisão mudar, um novo ADR o substitui.
 | [0004](0004-infraestrutura-gratuita.md) | Infraestrutura em free tiers | Aceito |
 | [0005](0005-eventos-com-outbox-no-postgres.md) | Eventos entre módulos com outbox no Postgres | Aceito |
 | [0006](0006-chave-de-organizador.md) | Chave de organizador (provisória até o login) | Aceito |
+| [0007](0007-tempo-real-com-sse.md) | Tempo real com SSE como sinal de invalidação | Aceito |

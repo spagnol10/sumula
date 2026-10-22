@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
@@ -36,10 +38,22 @@ class CampeonatoController {
 	record NovoTime(@NotBlank @Size(max = 80) String nome) {
 	}
 
-	record TimeResponse(UUID id, String nome) {
+	record NovoJogador(@NotBlank @Size(max = 80) String nome, @Min(0) @Max(999) Integer numero) {
+	}
+
+	record JogadorResponse(UUID id, String nome, Integer numero) {
+
+		static JogadorResponse de(Jogador j) {
+			return new JogadorResponse(j.getId(), j.getNome(), j.getNumero());
+		}
+
+	}
+
+	record TimeResponse(UUID id, String nome, List<JogadorResponse> jogadores) {
 
 		static TimeResponse de(Time time) {
-			return new TimeResponse(time.getId(), time.getNome());
+			return new TimeResponse(time.getId(), time.getNome(),
+					time.getJogadores().stream().map(JogadorResponse::de).toList());
 		}
 
 	}
@@ -87,6 +101,13 @@ class CampeonatoController {
 			@RequestHeader(name = CHAVE, required = false) String chave, @Valid @RequestBody NovoTime req) {
 		Time time = service.inscreverTime(id, chave, req.nome());
 		return ResponseEntity.created(URI.create("/api/v1/campeonatos/" + id)).body(TimeResponse.de(time));
+	}
+
+	@PostMapping("/{id}/times/{timeId}/jogadores")
+	ResponseEntity<JogadorResponse> inscreverJogador(@PathVariable UUID id, @PathVariable UUID timeId,
+			@RequestHeader(name = CHAVE, required = false) String chave, @Valid @RequestBody NovoJogador req) {
+		Jogador jogador = service.inscreverJogador(id, chave, timeId, req.nome(), req.numero());
+		return ResponseEntity.created(URI.create("/api/v1/campeonatos/" + id)).body(JogadorResponse.de(jogador));
 	}
 
 	@PostMapping("/{id}/iniciar")

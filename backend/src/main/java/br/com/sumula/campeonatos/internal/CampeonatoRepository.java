@@ -8,12 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CampeonatoRepository extends JpaRepository<Campeonato, UUID> {
 
-	/** O agregado é pequeno (até 40 times), então sempre carrega os times junto. */
+	/** O agregado é pequeno (até 40 times de 30 jogadores), então sempre carrega tudo junto. */
 	@Override
-	@EntityGraph(attributePaths = "times")
+	@EntityGraph(attributePaths = { "times", "times.jogadores" })
 	Optional<Campeonato> findById(UUID id);
 
-	@EntityGraph(attributePaths = "times")
+	@EntityGraph(attributePaths = { "times", "times.jogadores" })
 	Optional<Campeonato> findBySlug(String slug);
 
 }

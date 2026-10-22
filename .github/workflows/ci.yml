@@ -83,6 +83,7 @@ jobs:
           --health-retries 10
     env:
       API_URL: http://localhost:8080
+      NEXT_PUBLIC_API_URL: http://localhost:8080
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -108,12 +109,31 @@ jobs:
           cat ../backend.log
           exit 1
 
-      - name: Build do frontend
+      - name: Dependências do frontend
         working-directory: frontend
         run: |
           npm ci
-          npx playwright install --with-deps chromium
-          npm run build
+          echo "PLAYWRIGHT_VERSION=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_ENV"
+
+      # baixar o Chromium a cada execução custava minutos
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Navegador do Playwright
+        working-directory: frontend
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install-deps chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
+
+      - name: Build do frontend
+        working-directory: frontend
+        run: npm run build
 
       - name: Testes E2E
         working-directory: frontend

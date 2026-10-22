@@ -3,7 +3,11 @@
 
 export type StatusCampeonato = "INSCRICOES_ABERTAS" | "EM_ANDAMENTO";
 
+export type Jogador = { id: string; nome: string; numero: number | null };
+
 export type Time = { id: string; nome: string };
+
+export type TimeInscrito = Time & { jogadores: Jogador[] };
 
 export type Campeonato = {
   id: string;
@@ -12,19 +16,51 @@ export type Campeonato = {
   idaEVolta: boolean;
   status: StatusCampeonato;
   criadoEm: string;
-  times: Time[];
+  times: TimeInscrito[];
 };
 
 export type CampeonatoCriado = { campeonato: Campeonato; chaveOrganizador: string };
 
+export type TipoDeEvento = "GOL" | "CARTAO_AMARELO" | "CARTAO_VERMELHO";
+
+export type EventoDaPartida = {
+  id: string;
+  tipo: TipoDeEvento;
+  timeId: string;
+  jogadorId: string | null;
+  jogador: string | null;
+  minuto: number | null;
+};
+
 export type Partida = {
   id: string;
+  campeonatoId: string;
   rodada: number;
   mandante: Time;
   visitante: Time;
   golsMandante: number | null;
   golsVisitante: number | null;
-  status: "AGENDADA" | "ENCERRADA";
+  status: "AGENDADA" | "EM_ANDAMENTO" | "ENCERRADA";
+  placarPelaSumula: boolean;
+  eventos: EventoDaPartida[];
+};
+
+export type LinhaArtilharia = {
+  posicao: number;
+  jogadorId: string;
+  jogador: string;
+  timeId: string;
+  time: string;
+  gols: number;
+};
+
+export type Suspensao = {
+  jogadorId: string;
+  jogador: string;
+  timeId: string;
+  time: string;
+  motivo: "CARTAO_VERMELHO" | "ACUMULO_DE_AMARELOS";
+  rodadaDoCartao: number;
 };
 
 export type LinhaClassificacao = {
@@ -76,6 +112,9 @@ export const api = {
   buscarPorSlug: (slug: string) => request<Campeonato>(`/campeonatos/slug/${encodeURIComponent(slug)}`),
   listarPartidas: (id: string) => request<Partida[]>(`/campeonatos/${id}/partidas`),
   classificacao: (id: string) => request<LinhaClassificacao[]>(`/campeonatos/${id}/classificacao`),
+  artilharia: (id: string) => request<LinhaArtilharia[]>(`/campeonatos/${id}/artilharia`),
+  suspensoes: (id: string) => request<Suspensao[]>(`/campeonatos/${id}/suspensoes`),
+  buscarPartida: (id: string) => request<Partida>(`/partidas/${id}`),
 
   criarCampeonato: (nome: string, idaEVolta: boolean) =>
     request<CampeonatoCriado>("/campeonatos", { method: "POST", body: JSON.stringify({ nome, idaEVolta }) }),
@@ -92,6 +131,12 @@ export const api = {
   // Escritas: exigem a chave do organizador (ADR 0006)
   inscreverTime: (chave: string | undefined, campeonatoId: string, nome: string) =>
     request<Time>(`/campeonatos/${campeonatoId}/times`, { method: "POST", chave, body: JSON.stringify({ nome }) }),
+  inscreverJogador: (chave: string | undefined, campeonatoId: string, timeId: string, nome: string, numero: number | null) =>
+    request<Jogador>(`/campeonatos/${campeonatoId}/times/${timeId}/jogadores`, {
+      method: "POST",
+      chave,
+      body: JSON.stringify({ nome, numero }),
+    }),
   iniciar: (chave: string | undefined, campeonatoId: string) =>
     request<Campeonato>(`/campeonatos/${campeonatoId}/iniciar`, { method: "POST", chave }),
   registrarResultado: (chave: string | undefined, partidaId: string, golsMandante: number, golsVisitante: number) =>
@@ -100,4 +145,15 @@ export const api = {
       chave,
       body: JSON.stringify({ golsMandante, golsVisitante }),
     }),
+  iniciarPartida: (chave: string | undefined, partidaId: string) =>
+    request<Partida>(`/partidas/${partidaId}/inicio`, { method: "POST", chave }),
+  encerrarPartida: (chave: string | undefined, partidaId: string) =>
+    request<Partida>(`/partidas/${partidaId}/encerramento`, { method: "POST", chave }),
+  registrarEvento: (
+    chave: string | undefined,
+    partidaId: string,
+    evento: { tipo: TipoDeEvento; timeId: string; jogadorId: string | null; minuto: number | null },
+  ) => request<Partida>(`/partidas/${partidaId}/eventos`, { method: "POST", chave, body: JSON.stringify(evento) }),
+  removerEvento: (chave: string | undefined, partidaId: string, eventoId: string) =>
+    request<Partida>(`/partidas/${partidaId}/eventos/${eventoId}`, { method: "DELETE", chave }),
 };

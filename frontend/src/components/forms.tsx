@@ -3,16 +3,22 @@
 import { useActionState } from "react";
 import {
   criarCampeonato,
+  encerrarPartida,
   iniciarCampeonato,
+  iniciarPartida,
+  inscreverJogador,
   inscreverTime,
+  registrarEvento,
   registrarResultado,
+  removerEvento,
   type EstadoForm,
 } from "@/app/actions";
 
 const inicial: EstadoForm = {};
 
+// sem largura: cada uso define a sua (w-full aqui conflitava com w-20 e quebrava o layout no celular)
 const input =
-  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-900";
+  "rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-900";
 const botao =
   "rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700 disabled:opacity-60";
 
@@ -30,7 +36,7 @@ export function NovoCampeonatoForm() {
     <form action={action} className="flex flex-col gap-4">
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">Nome do campeonato</span>
-        <input name="nome" required maxLength={120} placeholder="Copa da Vila 2026" className={input} />
+        <input name="nome" required maxLength={120} placeholder="Copa da Vila 2026" className={`${input} w-full`} />
       </label>
       <label className="flex items-center gap-2">
         <input type="checkbox" name="idaEVolta" className="size-4 accent-emerald-600" />
@@ -49,7 +55,7 @@ export function InscreverTimeForm({ campeonatoId }: { campeonatoId: string }) {
   return (
     <form action={action} className="flex flex-col gap-1">
       <div className="flex gap-2">
-        <input name="nome" required maxLength={80} placeholder="Nome do time" aria-label="Nome do time" className={input} />
+        <input name="nome" required maxLength={80} placeholder="Nome do time" aria-label="Nome do time" className={`${input} min-w-0 flex-1`} />
         <button disabled={pendente} className={`${botao} shrink-0`}>
           Inscrever
         </button>
@@ -101,6 +107,115 @@ export function PlacarForm({
         <span className="truncate">{visitante}</span>
         <button disabled={pendente} className="rounded-md px-2 py-1 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-60 dark:text-emerald-400 dark:hover:bg-emerald-950">
           {golsMandante === null ? "Salvar" : "Corrigir"}
+        </button>
+      </div>
+      {estado.erro && <Erro estado={estado} />}
+    </form>
+  );
+}
+
+export function InscreverJogadorForm({ campeonatoId, timeId }: { campeonatoId: string; timeId: string }) {
+  const [estado, action, pendente] = useActionState(inscreverJogador.bind(null, campeonatoId, timeId), inicial);
+  return (
+    <form action={action} className="flex flex-col gap-1">
+      <div className="flex gap-2">
+        <input name="nome" required maxLength={80} placeholder="Nome do jogador" aria-label="Nome do jogador" className={`${input} min-w-0 flex-1`} />
+        <input name="numero" type="number" min={0} max={999} placeholder="Nº" aria-label="Número da camisa" className={`${input} w-20 shrink-0`} />
+        <button disabled={pendente} className={`${botao} shrink-0`}>
+          Adicionar
+        </button>
+      </div>
+      <Erro estado={estado} />
+    </form>
+  );
+}
+
+/** Botão que dispara uma action sem campos (iniciar, encerrar, desfazer). */
+export function BotaoDeAcao({
+  acao,
+  rotulo,
+  pendenteRotulo,
+  variante = "primario",
+}: {
+  acao: () => Promise<EstadoForm>;
+  rotulo: string;
+  pendenteRotulo?: string;
+  variante?: "primario" | "discreto";
+}) {
+  const [estado, action, pendente] = useActionState(acao, inicial);
+  const estilo =
+    variante === "primario"
+      ? botao
+      : "rounded-md px-2 py-1 text-xs font-medium text-zinc-500 hover:bg-zinc-100 hover:text-red-600 dark:hover:bg-zinc-800";
+  return (
+    <form action={action} className="flex flex-col gap-1">
+      <button disabled={pendente} className={estilo}>
+        {pendente && pendenteRotulo ? pendenteRotulo : rotulo}
+      </button>
+      {estado.erro && <Erro estado={estado} />}
+    </form>
+  );
+}
+
+export function IniciarPartida({ campeonatoId, partidaId }: { campeonatoId: string; partidaId: string }) {
+  return <BotaoDeAcao acao={iniciarPartida.bind(null, campeonatoId, partidaId)} rotulo="Iniciar partida" pendenteRotulo="Iniciando…" />;
+}
+
+export function EncerrarPartida({ campeonatoId, partidaId }: { campeonatoId: string; partidaId: string }) {
+  return <BotaoDeAcao acao={encerrarPartida.bind(null, campeonatoId, partidaId)} rotulo="Encerrar partida" pendenteRotulo="Encerrando…" />;
+}
+
+export function DesfazerEvento({ campeonatoId, partidaId, eventoId }: { campeonatoId: string; partidaId: string; eventoId: string }) {
+  return (
+    <BotaoDeAcao acao={removerEvento.bind(null, campeonatoId, partidaId, eventoId)} rotulo="Desfazer" variante="discreto" />
+  );
+}
+
+/** Lançamentos de um time na súmula: o botão clicado define o tipo do evento. */
+export function LancamentosDoTime({
+  campeonatoId,
+  partidaId,
+  time,
+  jogadores,
+  aceitaGols,
+}: {
+  campeonatoId: string;
+  partidaId: string;
+  time: { id: string; nome: string };
+  jogadores: { id: string; nome: string; numero: number | null }[];
+  aceitaGols: boolean;
+}) {
+  const [estado, action, pendente] = useActionState(
+    registrarEvento.bind(null, campeonatoId, partidaId, time.id),
+    inicial,
+  );
+  const acao = "flex-1 rounded-lg border border-zinc-300 px-2 py-2 text-sm font-medium hover:bg-zinc-100 disabled:opacity-60 dark:border-zinc-700 dark:hover:bg-zinc-800";
+  return (
+    <form action={action} aria-label={`Lançamentos do ${time.nome}`} className="flex flex-col gap-2 rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
+      <h3 className="font-semibold">{time.nome}</h3>
+      <div className="flex gap-2">
+        <select name="jogadorId" aria-label={`Jogador do ${time.nome}`} className={`${input} min-w-0 flex-1`} defaultValue="">
+          <option value="">Jogador (opcional no gol)</option>
+          {jogadores.map((j) => (
+            <option key={j.id} value={j.id}>
+              {j.numero !== null ? `${j.numero} · ` : ""}
+              {j.nome}
+            </option>
+          ))}
+        </select>
+        <input name="minuto" type="number" min={0} max={200} placeholder="Min" aria-label="Minuto" className={`${input} w-20 shrink-0`} />
+      </div>
+      <div className="flex gap-2">
+        {aceitaGols && (
+          <button name="tipo" value="GOL" disabled={pendente} className={acao}>
+            ⚽ Gol
+          </button>
+        )}
+        <button name="tipo" value="CARTAO_AMARELO" disabled={pendente} className={acao}>
+          🟨 Amarelo
+        </button>
+        <button name="tipo" value="CARTAO_VERMELHO" disabled={pendente} className={acao}>
+          🟥 Vermelho
         </button>
       </div>
       {estado.erro && <Erro estado={estado} />}
