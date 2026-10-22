@@ -17,7 +17,7 @@ suspensões calculadas sozinhas, e uma página pública para jogadores e torcida
 
 - **Backend:** Java 21, Spring Boot 4, Spring Modulith, Flyway, PostgreSQL, virtual threads
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4
-- **Qualidade:** testes de fronteira entre módulos, Testcontainers, CI no GitHub Actions, Dependabot
+- **Qualidade:** testes de fronteira entre módulos, Testcontainers, E2E com Playwright, CI no GitHub Actions, Dependabot
 
 As decisões de arquitetura e seus porquês estão em [`docs/adr`](docs/adr).
 
@@ -52,7 +52,12 @@ cd frontend && cp .env.example .env.local && npm install && npm run dev
 # Web em http://localhost:3000
 ```
 
-Testes do backend: `cd backend && ./mvnw verify` (precisa do Docker para o Testcontainers).
+Testes:
+- Backend: `cd backend && ./mvnw verify` (precisa do Docker para o Testcontainers)
+- E2E: com backend e frontend rodando, `cd frontend && npm run e2e` (Playwright, viewport de celular)
+
+O CI roda os três: backend com Postgres via Testcontainers, frontend (lint, tipos, build) e E2E
+com Postgres de serviço, API e Next de produção.
 
 ## Roadmap
 

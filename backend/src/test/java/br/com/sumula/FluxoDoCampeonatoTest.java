@@ -83,7 +83,8 @@ class FluxoDoCampeonatoTest {
 	@Test
 	void validaEntradaERecursoInexistente() {
 		assertThat(post("/api/v1/campeonatos", """
-				{"nome": "  "}""")).hasStatus(HttpStatus.BAD_REQUEST);
+				{"nome": "  "}""")).hasStatus(HttpStatus.BAD_REQUEST)
+			.bodyJson().extractingPath("$.detail").isEqualTo("nome: não deve estar em branco");
 		assertThat(get("/api/v1/campeonatos/" + UUID.randomUUID())).hasStatus(HttpStatus.NOT_FOUND)
 			.bodyJson().extractingPath("$.detail").asString().contains("Campeonato");
 	}

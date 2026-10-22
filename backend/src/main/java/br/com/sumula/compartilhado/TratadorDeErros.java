@@ -1,15 +1,34 @@
 package br.com.sumula.compartilhado;
 
+import java.util.stream.Collectors;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /** Traduz exceções de domínio para respostas RFC 9457 (Problem Details). */
 @RestControllerAdvice
 class TratadorDeErros extends ResponseEntityExceptionHandler {
+
+	/** Lista os campos inválidos, ex.: "nome: não deve estar em branco". */
+	@Override
+	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException e,
+			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+		String detalhe = e.getFieldErrors()
+			.stream()
+			.map(erro -> erro.getField() + ": " + erro.getDefaultMessage())
+			.sorted()
+			.collect(Collectors.joining("; "));
+		return ResponseEntity.badRequest().body(ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detalhe));
+	}
 
 	@ExceptionHandler
 	ProblemDetail naoEncontrado(RecursoNaoEncontradoException e) {

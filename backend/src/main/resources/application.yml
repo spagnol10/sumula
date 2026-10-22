@@ -14,6 +14,10 @@ spring:
   threads:
     virtual:
       enabled: true
+  web:
+    # mensagens de validação em português, independente do Accept-Language
+    locale: pt_BR
+    locale-resolver: fixed
 
 server:
   port: ${PORT:8080}
