@@ -27,4 +27,17 @@ public class Partidas {
 			.toList();
 	}
 
+	/** Todas as partidas com a súmula, em ordem de rodada. */
+	public List<PartidaResumo> comSumula(UUID campeonatoId) {
+		return partidas.findByCampeonatoIdOrderByRodadaAsc(campeonatoId)
+			.stream()
+			.map(p -> new PartidaResumo(p.getId(), p.getRodada(), p.getMandanteId(), p.getVisitanteId(),
+					p.getStatus() == StatusPartida.ENCERRADA,
+					p.getEventos()
+						.stream()
+						.map(e -> new PartidaResumo.Evento(e.getTipo(), e.getTimeId(), e.getJogadorId(), e.getMinuto()))
+						.toList()))
+			.toList();
+	}
+
 }

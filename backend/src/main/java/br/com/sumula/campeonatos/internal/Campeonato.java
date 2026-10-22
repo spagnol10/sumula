@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import br.com.sumula.compartilhado.AcessoNegadoException;
+import br.com.sumula.compartilhado.RecursoNaoEncontradoException;
 import br.com.sumula.compartilhado.RegraDeNegocioException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -85,6 +86,14 @@ public class Campeonato {
 		Time time = new Time(this, nome);
 		times.add(time);
 		return time;
+	}
+
+	Jogador inscreverJogador(UUID timeId, String nome, Integer numero) {
+		return times.stream()
+			.filter(t -> t.getId().equals(timeId))
+			.findFirst()
+			.orElseThrow(() -> new RecursoNaoEncontradoException("Time", timeId))
+			.inscreverJogador(nome, numero);
 	}
 
 	void iniciar() {

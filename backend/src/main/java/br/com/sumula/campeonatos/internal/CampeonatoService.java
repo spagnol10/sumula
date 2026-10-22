@@ -53,6 +53,14 @@ class CampeonatoService {
 		return time;
 	}
 
+	Jogador inscreverJogador(UUID campeonatoId, String chave, UUID timeId, String nome, Integer numero) {
+		Campeonato campeonato = buscar(campeonatoId);
+		campeonato.exigirOrganizador(chave);
+		Jogador jogador = campeonato.inscreverJogador(timeId, nome, numero);
+		campeonatos.flush();
+		return jogador;
+	}
+
 	Campeonato iniciar(UUID id, String chave) {
 		Campeonato campeonato = buscar(id);
 		campeonato.exigirOrganizador(chave);
