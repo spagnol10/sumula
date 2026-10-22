@@ -26,7 +26,8 @@ class CampeonatoController {
 		this.service = service;
 	}
 
-	record NovoCampeonato(@NotBlank @Size(max = 120) String nome, boolean idaEVolta) {
+	/** {@code idaEVolta} é opcional; ausente significa turno único. */
+	record NovoCampeonato(@NotBlank @Size(max = 120) String nome, Boolean idaEVolta) {
 	}
 
 	record NovoTime(@NotBlank @Size(max = 80) String nome) {
@@ -52,7 +53,7 @@ class CampeonatoController {
 
 	@PostMapping
 	ResponseEntity<CampeonatoResponse> criar(@Valid @RequestBody NovoCampeonato req) {
-		Campeonato campeonato = service.criar(req.nome(), req.idaEVolta());
+		Campeonato campeonato = service.criar(req.nome(), Boolean.TRUE.equals(req.idaEVolta()));
 		return ResponseEntity.created(URI.create("/api/v1/campeonatos/" + campeonato.getId()))
 			.body(CampeonatoResponse.de(campeonato));
 	}
