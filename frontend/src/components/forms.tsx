@@ -16,8 +16,9 @@ import {
 
 const inicial: EstadoForm = {};
 
+// sem largura: cada uso define a sua (w-full aqui conflitava com w-20 e quebrava o layout no celular)
 const input =
-  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-900";
+  "rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-900";
 const botao =
   "rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700 disabled:opacity-60";
 
@@ -35,7 +36,7 @@ export function NovoCampeonatoForm() {
     <form action={action} className="flex flex-col gap-4">
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">Nome do campeonato</span>
-        <input name="nome" required maxLength={120} placeholder="Copa da Vila 2026" className={input} />
+        <input name="nome" required maxLength={120} placeholder="Copa da Vila 2026" className={`${input} w-full`} />
       </label>
       <label className="flex items-center gap-2">
         <input type="checkbox" name="idaEVolta" className="size-4 accent-emerald-600" />
@@ -54,7 +55,7 @@ export function InscreverTimeForm({ campeonatoId }: { campeonatoId: string }) {
   return (
     <form action={action} className="flex flex-col gap-1">
       <div className="flex gap-2">
-        <input name="nome" required maxLength={80} placeholder="Nome do time" aria-label="Nome do time" className={input} />
+        <input name="nome" required maxLength={80} placeholder="Nome do time" aria-label="Nome do time" className={`${input} min-w-0 flex-1`} />
         <button disabled={pendente} className={`${botao} shrink-0`}>
           Inscrever
         </button>
@@ -118,7 +119,7 @@ export function InscreverJogadorForm({ campeonatoId, timeId }: { campeonatoId: s
   return (
     <form action={action} className="flex flex-col gap-1">
       <div className="flex gap-2">
-        <input name="nome" required maxLength={80} placeholder="Nome do jogador" aria-label="Nome do jogador" className={input} />
+        <input name="nome" required maxLength={80} placeholder="Nome do jogador" aria-label="Nome do jogador" className={`${input} min-w-0 flex-1`} />
         <input name="numero" type="number" min={0} max={999} placeholder="Nº" aria-label="Número da camisa" className={`${input} w-20 shrink-0`} />
         <button disabled={pendente} className={`${botao} shrink-0`}>
           Adicionar
@@ -193,7 +194,7 @@ export function LancamentosDoTime({
     <form action={action} aria-label={`Lançamentos do ${time.nome}`} className="flex flex-col gap-2 rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
       <h3 className="font-semibold">{time.nome}</h3>
       <div className="flex gap-2">
-        <select name="jogadorId" aria-label={`Jogador do ${time.nome}`} className={input} defaultValue="">
+        <select name="jogadorId" aria-label={`Jogador do ${time.nome}`} className={`${input} min-w-0 flex-1`} defaultValue="">
           <option value="">Jogador (opcional no gol)</option>
           {jogadores.map((j) => (
             <option key={j.id} value={j.id}>
