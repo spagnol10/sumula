@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import br.com.sumula.compartilhado.AcessoNegadoException;
 import br.com.sumula.compartilhado.RegraDeNegocioException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -42,6 +43,8 @@ public class Campeonato {
 
 	private Instant criadoEm;
 
+	private String chaveOrganizadorHash;
+
 	@OneToMany(mappedBy = "campeonato", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("inscritoEm")
 	private List<Time> times = new ArrayList<>();
@@ -52,13 +55,20 @@ public class Campeonato {
 	protected Campeonato() {
 	}
 
-	Campeonato(String nome, String slug, boolean idaEVolta) {
+	Campeonato(String nome, String slug, boolean idaEVolta, String chaveOrganizadorHash) {
 		this.id = UUID.randomUUID();
 		this.nome = nome.strip();
 		this.slug = slug;
 		this.idaEVolta = idaEVolta;
 		this.status = StatusCampeonato.INSCRICOES_ABERTAS;
 		this.criadoEm = Instant.now();
+		this.chaveOrganizadorHash = chaveOrganizadorHash;
+	}
+
+	public void exigirOrganizador(String chave) {
+		if (!ChaveDeOrganizador.confere(chave, chaveOrganizadorHash)) {
+			throw new AcessoNegadoException("Chave de organizador ausente ou inválida");
+		}
 	}
 
 	Time inscrever(String nomeDoTime) {

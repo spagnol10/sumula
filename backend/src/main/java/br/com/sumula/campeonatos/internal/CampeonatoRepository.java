@@ -13,4 +13,7 @@ public interface CampeonatoRepository extends JpaRepository<Campeonato, UUID> {
 	@EntityGraph(attributePaths = "times")
 	Optional<Campeonato> findById(UUID id);
 
+	@EntityGraph(attributePaths = "times")
+	Optional<Campeonato> findBySlug(String slug);
+
 }

@@ -13,12 +13,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/campeonatos")
 class CampeonatoController {
+
+	static final String CHAVE = "X-Chave-Organizador";
 
 	private final CampeonatoService service;
 
@@ -51,11 +54,15 @@ class CampeonatoController {
 
 	}
 
+	/** A chave só aparece nesta resposta; depois disso apenas o hash fica guardado. */
+	record CampeonatoCriado(CampeonatoResponse campeonato, String chaveOrganizador) {
+	}
+
 	@PostMapping
-	ResponseEntity<CampeonatoResponse> criar(@Valid @RequestBody NovoCampeonato req) {
-		Campeonato campeonato = service.criar(req.nome(), Boolean.TRUE.equals(req.idaEVolta()));
-		return ResponseEntity.created(URI.create("/api/v1/campeonatos/" + campeonato.getId()))
-			.body(CampeonatoResponse.de(campeonato));
+	ResponseEntity<CampeonatoCriado> criar(@Valid @RequestBody NovoCampeonato req) {
+		CampeonatoService.Criado criado = service.criar(req.nome(), Boolean.TRUE.equals(req.idaEVolta()));
+		return ResponseEntity.created(URI.create("/api/v1/campeonatos/" + criado.campeonato().getId()))
+			.body(new CampeonatoCriado(CampeonatoResponse.de(criado.campeonato()), criado.chaveOrganizador()));
 	}
 
 	@GetMapping("/{id}")
@@ -63,15 +70,28 @@ class CampeonatoController {
 		return CampeonatoResponse.de(service.buscar(id));
 	}
 
+	@GetMapping("/slug/{slug}")
+	CampeonatoResponse buscarPorSlug(@PathVariable String slug) {
+		return CampeonatoResponse.de(service.buscarPorSlug(slug));
+	}
+
+	/** Permite ao frontend validar uma chave antes de guardá-la (ex.: link de acesso). */
+	@PostMapping("/{id}/chave/verificacao")
+	ResponseEntity<Void> verificarChave(@PathVariable UUID id, @RequestHeader(name = CHAVE, required = false) String chave) {
+		service.verificarChave(id, chave);
+		return ResponseEntity.noContent().build();
+	}
+
 	@PostMapping("/{id}/times")
-	ResponseEntity<TimeResponse> inscreverTime(@PathVariable UUID id, @Valid @RequestBody NovoTime req) {
-		Time time = service.inscreverTime(id, req.nome());
+	ResponseEntity<TimeResponse> inscreverTime(@PathVariable UUID id,
+			@RequestHeader(name = CHAVE, required = false) String chave, @Valid @RequestBody NovoTime req) {
+		Time time = service.inscreverTime(id, chave, req.nome());
 		return ResponseEntity.created(URI.create("/api/v1/campeonatos/" + id)).body(TimeResponse.de(time));
 	}
 
 	@PostMapping("/{id}/iniciar")
-	CampeonatoResponse iniciar(@PathVariable UUID id) {
-		return CampeonatoResponse.de(service.iniciar(id));
+	CampeonatoResponse iniciar(@PathVariable UUID id, @RequestHeader(name = CHAVE, required = false) String chave) {
+		return CampeonatoResponse.de(service.iniciar(id, chave));
 	}
 
 }

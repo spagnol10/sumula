@@ -25,14 +25,17 @@ As decisões de arquitetura e seus porquês estão em [`docs/adr`](docs/adr).
 
 Documentação interativa em `http://localhost:8080/api/docs/ui` (OpenAPI em `/api/docs`).
 
+Escritas (🔑) exigem o cabeçalho `X-Chave-Organizador`, devolvido na criação ([ADR 0006](docs/adr/0006-chave-de-organizador.md)).
+
 | Método | Rota | O que faz |
 |---|---|---|
-| `POST` | `/api/v1/campeonatos` | Cria um campeonato (pontos corridos, turno único ou ida e volta) |
-| `GET` | `/api/v1/campeonatos/{id}` | Detalhes e times inscritos |
-| `POST` | `/api/v1/campeonatos/{id}/times` | Inscreve um time |
-| `POST` | `/api/v1/campeonatos/{id}/iniciar` | Fecha as inscrições e dispara a geração da tabela |
+| `POST` | `/api/v1/campeonatos` | Cria um campeonato e devolve a chave do organizador |
+| `GET` | `/api/v1/campeonatos/{id}` · `/slug/{slug}` | Detalhes e times inscritos |
+| `POST` 🔑 | `/api/v1/campeonatos/{id}/times` | Inscreve um time |
+| `POST` 🔑 | `/api/v1/campeonatos/{id}/iniciar` | Fecha as inscrições e dispara a geração da tabela |
+| `POST` 🔑 | `/api/v1/campeonatos/{id}/chave/verificacao` | Confere uma chave (204 ou 403) |
 | `GET` | `/api/v1/campeonatos/{id}/partidas` | Tabela de jogos por rodada |
-| `PUT` | `/api/v1/partidas/{id}/resultado` | Lança ou corrige o placar |
+| `PUT` 🔑 | `/api/v1/partidas/{id}/resultado` | Lança ou corrige o placar |
 | `GET` | `/api/v1/campeonatos/{id}/classificacao` | Classificação com critérios de desempate |
 
 A tabela usa o método do círculo (Berger) com mando equilibrado e o mínimo teórico de jogos

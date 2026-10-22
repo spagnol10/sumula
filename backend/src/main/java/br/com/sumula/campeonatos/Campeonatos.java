@@ -19,6 +19,13 @@ public class Campeonatos {
 		this.campeonatos = campeonatos;
 	}
 
+	/** Lança {@link br.com.sumula.compartilhado.AcessoNegadoException} se a chave não for a do organizador. */
+	public void exigirOrganizador(UUID campeonatoId, String chave) {
+		campeonatos.findById(campeonatoId)
+			.orElseThrow(() -> new RecursoNaoEncontradoException("Campeonato", campeonatoId))
+			.exigirOrganizador(chave);
+	}
+
 	public List<TimeResumo> times(UUID campeonatoId) {
 		return campeonatos.findById(campeonatoId)
 			.orElseThrow(() -> new RecursoNaoEncontradoException("Campeonato", campeonatoId))

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -62,8 +63,11 @@ class PartidaController {
 
 	@PutMapping("/partidas/{id}/resultado")
 	@Transactional
-	PartidaResponse registrarResultado(@PathVariable UUID id, @Valid @RequestBody Placar placar) {
+	PartidaResponse registrarResultado(@PathVariable UUID id,
+			@RequestHeader(name = "X-Chave-Organizador", required = false) String chave,
+			@Valid @RequestBody Placar placar) {
 		Partida partida = partidas.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Partida", id));
+		campeonatos.exigirOrganizador(partida.getCampeonatoId(), chave);
 		partida.registrarResultado(placar.golsMandante(), placar.golsVisitante());
 		partidas.flush();
 		return PartidaResponse.de(partida, nomesDosTimes(partida.getCampeonatoId()));

@@ -76,19 +76,21 @@ const golsInput =
   "w-12 rounded-md border border-zinc-300 bg-white px-1 py-1 text-center tabular-nums dark:border-zinc-700 dark:bg-zinc-900";
 
 export function PlacarForm({
+  campeonatoId,
   partidaId,
   mandante,
   visitante,
   golsMandante,
   golsVisitante,
 }: {
+  campeonatoId: string;
   partidaId: string;
   mandante: string;
   visitante: string;
   golsMandante: number | null;
   golsVisitante: number | null;
 }) {
-  const [estado, action, pendente] = useActionState(registrarResultado.bind(null, partidaId), inicial);
+  const [estado, action, pendente] = useActionState(registrarResultado.bind(null, campeonatoId, partidaId), inicial);
   return (
     <form action={action} className="flex flex-col gap-1">
       <div className="grid grid-cols-[1fr_auto_auto_auto_1fr_auto] items-center gap-2">

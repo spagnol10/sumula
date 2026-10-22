@@ -34,4 +34,10 @@ test("organizador cria o campeonato, gera a tabela e lança um placar", async ({
   const lider = page.getByRole("row").nth(1);
   await expect(lider).toContainText(mandante);
   await expect(lider.getByRole("cell").nth(2)).toHaveText("3");
+
+  // a página pública mostra o mesmo resultado, sem formulários
+  await page.getByRole("link", { name: "Página pública" }).click();
+  await expect(page.getByRole("row").nth(1)).toContainText(mandante);
+  await expect(page.getByText("3 × 1")).toBeVisible();
+  await expect(page.getByRole("spinbutton")).toHaveCount(0);
 });
