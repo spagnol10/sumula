@@ -1,6 +1,14 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { Cabecalho, Rodadas, TabelaDeClassificacao, TimesInscritos } from "@/components/campeonato";
+import { AoVivo } from "@/components/ao-vivo";
+import {
+  Cabecalho,
+  ListaDeSuspensos,
+  Rodadas,
+  TabelaDeArtilharia,
+  TabelaDeClassificacao,
+  TimesInscritos,
+} from "@/components/campeonato";
 import { api, ApiError, type Campeonato } from "@/lib/api";
 
 /** Página pública do campeonato: o link que o organizador manda para os times. Só leitura. */
@@ -34,15 +42,20 @@ async function Conteudo({ params }: { params: Promise<{ slug: string }> }) {
     );
   }
 
-  const [partidas, classificacao] = await Promise.all([
+  const [partidas, classificacao, artilharia, suspensos] = await Promise.all([
     api.listarPartidas(campeonato.id),
     api.classificacao(campeonato.id),
+    api.artilharia(campeonato.id),
+    api.suspensoes(campeonato.id),
   ]);
   return (
     <>
       <Cabecalho campeonato={campeonato} />
+      <AoVivo campeonatoId={campeonato.id} />
       <TabelaDeClassificacao linhas={classificacao} />
       <Rodadas partidas={partidas} />
+      <TabelaDeArtilharia linhas={artilharia} />
+      <ListaDeSuspensos suspensos={suspensos} />
     </>
   );
 }

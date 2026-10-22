@@ -36,7 +36,15 @@ Escritas (🔑) exigem o cabeçalho `X-Chave-Organizador`, devolvido na criaçã
 | `POST` 🔑 | `/api/v1/campeonatos/{id}/chave/verificacao` | Confere uma chave (204 ou 403) |
 | `GET` | `/api/v1/campeonatos/{id}/partidas` | Tabela de jogos por rodada |
 | `PUT` 🔑 | `/api/v1/partidas/{id}/resultado` | Lança ou corrige o placar |
+| `POST` 🔑 | `/api/v1/campeonatos/{id}/times/{timeId}/jogadores` | Inscreve um jogador (número opcional) |
 | `GET` | `/api/v1/campeonatos/{id}/classificacao` | Classificação com critérios de desempate |
+| `GET` | `/api/v1/campeonatos/{id}/artilharia` | Artilheiros (conta jogos em andamento) |
+| `GET` | `/api/v1/campeonatos/{id}/suspensoes` | Suspensos para o próximo jogo (vermelho ou 3 amarelos) |
+| `GET` | `/api/v1/campeonatos/{id}/ao-vivo` | SSE: avisa quando uma partida muda ([ADR 0007](docs/adr/0007-tempo-real-com-sse.md)) |
+| `GET` | `/api/v1/partidas/{id}` | Partida com a súmula |
+| `POST` 🔑 | `/api/v1/partidas/{id}/inicio` · `/encerramento` | Inicia ou encerra a partida |
+| `POST` 🔑 | `/api/v1/partidas/{id}/eventos` | Lança gol ou cartão; o placar é a contagem dos gols |
+| `DELETE` 🔑 | `/api/v1/partidas/{id}/eventos/{eventoId}` | Desfaz um lance |
 
 A tabela usa o método do círculo (Berger) com mando equilibrado e o mínimo teórico de jogos
 seguidos com o mesmo mando. Ver `GeradorDeTabela` e seus testes de propriedade.
@@ -66,6 +74,6 @@ com Postgres de serviço, API e Next de produção.
 
 - [ ] **Fase 0, fundação:** monorepo, CI/CD, ADRs, deploy das duas pontas
 - [ ] **Fase 1, MVP:** login, campeonatos, times e jogadores, geração de tabela, resultados, classificação pública
-- [ ] **Fase 2, ao vivo:** súmula em tempo real (SSE), artilharia, suspensões, previews para WhatsApp
+- [ ] **Fase 2, ao vivo:** ~~página pública~~, ~~súmula em tempo real (SSE)~~, ~~artilharia~~, ~~suspensões~~, previews para WhatsApp
 - [ ] **Fase 3, monetização:** planos Free/Pro, inscrição paga via Pix, painel do organizador
 - [ ] **Fase 4, crescimento:** artes automáticas, resumo da rodada com IA, rankings

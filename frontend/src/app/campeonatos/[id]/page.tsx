@@ -2,7 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AtualizacaoAutomatica } from "@/components/atualizacao-automatica";
-import { Cabecalho, Rodadas, TabelaDeClassificacao, TimesInscritos } from "@/components/campeonato";
+import { AoVivo } from "@/components/ao-vivo";
+import {
+  Cabecalho,
+  ListaDeSuspensos,
+  Rodadas,
+  TabelaDeArtilharia,
+  TabelaDeClassificacao,
+  TimesEJogadores,
+  TimesInscritos,
+} from "@/components/campeonato";
 import { CopiarLink } from "@/components/copiar-link";
 import { InscreverTimeForm, IniciarCampeonatoForm } from "@/components/forms";
 import { api, ApiError, type Campeonato } from "@/lib/api";
@@ -59,8 +68,12 @@ async function Conteudo({ params }: { params: Promise<{ id: string }> }) {
       {campeonato.status === "INSCRICOES_ABERTAS" ? (
         <Inscricoes campeonato={campeonato} />
       ) : (
-        <EmAndamento campeonatoId={id} />
+        <>
+          <AoVivo campeonatoId={id} />
+          <EmAndamento campeonatoId={id} />
+        </>
       )}
+      <TimesEJogadores campeonato={campeonato} />
     </>
   );
 }
@@ -85,9 +98,11 @@ function Inscricoes({ campeonato }: { campeonato: Campeonato }) {
 }
 
 async function EmAndamento({ campeonatoId }: { campeonatoId: string }) {
-  const [partidas, classificacao] = await Promise.all([
+  const [partidas, classificacao, artilharia, suspensos] = await Promise.all([
     api.listarPartidas(campeonatoId),
     api.classificacao(campeonatoId),
+    api.artilharia(campeonatoId),
+    api.suspensoes(campeonatoId),
   ]);
   if (partidas.length === 0) {
     return (
@@ -101,6 +116,8 @@ async function EmAndamento({ campeonatoId }: { campeonatoId: string }) {
     <>
       <TabelaDeClassificacao linhas={classificacao} />
       <Rodadas partidas={partidas} campeonatoId={campeonatoId} />
+      <TabelaDeArtilharia linhas={artilharia} />
+      <ListaDeSuspensos suspensos={suspensos} />
     </>
   );
 }
