@@ -31,7 +31,7 @@ class FluxoDoCampeonatoTest {
 	@Test
 	void doCadastroAClassificacao() throws Exception {
 		MvcTestResult criado = post("/api/v1/campeonatos", """
-				{"nome": "Copa da Vila", "idaEVolta": false}""");
+				{"nome": "Copa da Vila"}""");
 		assertThat(criado).hasStatus(HttpStatus.CREATED).bodyJson().extractingPath("$.status")
 			.isEqualTo("INSCRICOES_ABERTAS");
 		assertThat(criado).bodyJson().extractingPath("$.slug").asString().startsWith("copa-da-vila-");
@@ -83,7 +83,10 @@ class FluxoDoCampeonatoTest {
 	@Test
 	void validaEntradaERecursoInexistente() {
 		assertThat(post("/api/v1/campeonatos", """
-				{"nome": "  "}""")).hasStatus(HttpStatus.BAD_REQUEST);
+				{"nome": "  "}""")).hasStatus(HttpStatus.BAD_REQUEST)
+			.bodyJson().extractingPath("$.detail").isEqualTo("nome: não deve estar em branco");
+		assertThat(post("/api/v1/campeonatos", "{\"nome\": ")).hasStatus(HttpStatus.BAD_REQUEST)
+			.bodyJson().extractingPath("$.detail").asString().startsWith("Corpo da requisição inválido");
 		assertThat(get("/api/v1/campeonatos/" + UUID.randomUUID())).hasStatus(HttpStatus.NOT_FOUND)
 			.bodyJson().extractingPath("$.detail").asString().contains("Campeonato");
 	}
