@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AoVivo } from "@/components/ao-vivo";
@@ -10,6 +11,24 @@ import {
   TimesInscritos,
 } from "@/components/campeonato";
 import { api, ApiError, type Campeonato } from "@/lib/api";
+
+export async function generateMetadata({ params }: PageProps<"/c/[slug]">): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const campeonato = await api.buscarPorSlug(slug);
+    const descricao =
+      campeonato.status === "INSCRICOES_ABERTAS"
+        ? `Inscrições abertas · ${campeonato.times.length} times inscritos`
+        : `Classificação, jogos e artilharia ao vivo · ${campeonato.times.length} times`;
+    return {
+      title: `${campeonato.nome} · Súmula`,
+      description: descricao,
+      openGraph: { title: campeonato.nome, description: descricao, siteName: "Súmula", type: "website" },
+    };
+  } catch {
+    return { title: "Campeonato · Súmula" };
+  }
+}
 
 /** Página pública do campeonato: o link que o organizador manda para os times. Só leitura. */
 export default function PaginaPublica({ params }: PageProps<"/c/[slug]">) {
