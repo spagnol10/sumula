@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import br.com.sumula.compartilhado.RegraDeNegocioException;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -33,6 +34,7 @@ public class Campeonato {
 
 	private String slug;
 
+	@Column(name = "ida_e_volta") // a estratégia padrão geraria "idaevolta"
 	private boolean idaEVolta;
 
 	@Enumerated(EnumType.STRING)
