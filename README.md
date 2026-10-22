@@ -63,6 +63,12 @@ cd frontend && cp .env.example .env.local && npm install && npm run dev
 # Web em http://localhost:3000
 ```
 
+Sem Docker (Mac Apple Silicon), a API sobe com um Postgres 17 embutido:
+
+```bash
+cd backend && ./mvnw spring-boot:test-run -Dspring-boot.run.main-class=br.com.sumula.DevLocal
+```
+
 Testes:
 - Backend: `cd backend && ./mvnw verify` (precisa do Docker para o Testcontainers)
 - E2E: com backend e frontend rodando, `cd frontend && npm run e2e` (Playwright, viewport de celular)
@@ -74,6 +80,6 @@ com Postgres de serviço, API e Next de produção.
 
 - [ ] **Fase 0, fundação:** monorepo, CI/CD, ADRs, deploy das duas pontas
 - [ ] **Fase 1, MVP:** login, campeonatos, times e jogadores, geração de tabela, resultados, classificação pública
-- [ ] **Fase 2, ao vivo:** ~~página pública~~, ~~súmula em tempo real (SSE)~~, ~~artilharia~~, ~~suspensões~~, previews para WhatsApp
+- [x] **Fase 2, ao vivo:** página pública, súmula em tempo real (SSE), artilharia, suspensões, preview para WhatsApp
 - [ ] **Fase 3, monetização:** planos Free/Pro, inscrição paga via Pix, painel do organizador
 - [ ] **Fase 4, crescimento:** artes automáticas, resumo da rodada com IA, rankings

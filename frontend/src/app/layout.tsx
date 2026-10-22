@@ -13,6 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // URLs absolutas nas meta tags (og:image) exigem a origem pública do site
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: "Súmula",
   description: "Campeonatos amadores com tabela automática, súmula ao vivo e estatísticas.",
 };

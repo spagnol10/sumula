@@ -84,6 +84,7 @@ jobs:
     env:
       API_URL: http://localhost:8080
       NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

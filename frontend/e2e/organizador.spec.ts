@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("organizador cria o campeonato, gera a tabela e lança um placar", async ({ page }) => {
+test("organizador cria o campeonato, gera a tabela e lança um placar", async ({ page, request }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Criar meu campeonato" }).click();
 
@@ -40,4 +40,13 @@ test("organizador cria o campeonato, gera a tabela e lança um placar", async ({
   await expect(page.getByRole("row").nth(1)).toContainText(mandante);
   await expect(page.getByText("3 × 1")).toBeVisible();
   await expect(page.getByRole("spinbutton")).toHaveCount(0);
+
+  // preview do link no WhatsApp: o robô não executa JS, então tudo precisa estar no HTML
+  const html = await (await request.get(page.url(), { headers: { "User-Agent": "WhatsApp/2.23.20.0 A" } })).text();
+  expect(html).toContain('<meta property="og:title" content="Copa E2E"/>');
+  const imagem = html.match(/<meta property="og:image" content="([^"]+)"/)?.[1];
+  expect(imagem).toBeTruthy();
+  const png = await request.get(imagem!.replaceAll("&amp;", "&"));
+  expect(png.status()).toBe(200);
+  expect(png.headers()["content-type"]).toBe("image/png");
 });
