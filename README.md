@@ -63,6 +63,12 @@ cd frontend && cp .env.example .env.local && npm install && npm run dev
 # Web em http://localhost:3000
 ```
 
+Sem Docker (Mac Apple Silicon), a API sobe com um Postgres 17 embutido:
+
+```bash
+cd backend && ./mvnw spring-boot:test-run -Dspring-boot.run.main-class=br.com.sumula.DevLocal
+```
+
 Testes:
 - Backend: `cd backend && ./mvnw verify` (precisa do Docker para o Testcontainers)
 - E2E: com backend e frontend rodando, `cd frontend && npm run e2e` (Playwright, viewport de celular)
