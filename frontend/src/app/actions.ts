@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, type TipoDeEvento } from "@/lib/api";
 import { chaveDoOrganizador, guardarChave } from "@/lib/organizador";
 
 // Toda escrita envia a chave do cookie; quem decide se ela vale é o backend.
@@ -66,4 +66,69 @@ export async function registrarResultado(
   }
   refresh();
   return {};
+}
+
+const textoOuNulo = (form: FormData, campo: string) => {
+  const valor = String(form.get(campo) ?? "").trim();
+  return valor === "" ? null : valor;
+};
+
+const numeroOuNulo = (form: FormData, campo: string) => {
+  const valor = textoOuNulo(form, campo);
+  return valor === null ? null : Number.parseInt(valor, 10);
+};
+
+/** Executa uma escrita com a chave do campeonato e atualiza a tela. */
+async function comChave(
+  campeonatoId: string,
+  escrita: (chave: string | undefined) => Promise<unknown>,
+): Promise<EstadoForm> {
+  try {
+    await escrita(await chaveDoOrganizador(campeonatoId));
+  } catch (e) {
+    return mensagem(e);
+  }
+  refresh();
+  return {};
+}
+
+export async function inscreverJogador(
+  campeonatoId: string,
+  timeId: string,
+  _: EstadoForm,
+  form: FormData,
+): Promise<EstadoForm> {
+  return comChave(campeonatoId, (chave) =>
+    api.inscreverJogador(chave, campeonatoId, timeId, String(form.get("nome") ?? ""), numeroOuNulo(form, "numero")),
+  );
+}
+
+export async function iniciarPartida(campeonatoId: string, partidaId: string): Promise<EstadoForm> {
+  return comChave(campeonatoId, (chave) => api.iniciarPartida(chave, partidaId));
+}
+
+export async function encerrarPartida(campeonatoId: string, partidaId: string): Promise<EstadoForm> {
+  return comChave(campeonatoId, (chave) => api.encerrarPartida(chave, partidaId));
+}
+
+/** O botão clicado define o tipo (name="tipo"); o formulário de cada time define o time. */
+export async function registrarEvento(
+  campeonatoId: string,
+  partidaId: string,
+  timeId: string,
+  _: EstadoForm,
+  form: FormData,
+): Promise<EstadoForm> {
+  return comChave(campeonatoId, (chave) =>
+    api.registrarEvento(chave, partidaId, {
+      tipo: String(form.get("tipo")) as TipoDeEvento,
+      timeId,
+      jogadorId: textoOuNulo(form, "jogadorId"),
+      minuto: numeroOuNulo(form, "minuto"),
+    }),
+  );
+}
+
+export async function removerEvento(campeonatoId: string, partidaId: string, eventoId: string): Promise<EstadoForm> {
+  return comChave(campeonatoId, (chave) => api.removerEvento(chave, partidaId, eventoId));
 }
