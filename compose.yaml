@@ -1,0 +1,19 @@
+# Infra local de desenvolvimento: docker compose up -d
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: sumula
+      POSTGRES_USER: sumula
+      POSTGRES_PASSWORD: sumula
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sumula"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
