@@ -45,6 +45,11 @@ class TratadorDeErros extends ResponseEntityExceptionHandler {
 	}
 
 	@ExceptionHandler
+	ProblemDetail acessoNegado(AcessoNegadoException e) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+	}
+
+	@ExceptionHandler
 	ProblemDetail regraDeNegocio(RegraDeNegocioException e) {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, e.getMessage());
 	}

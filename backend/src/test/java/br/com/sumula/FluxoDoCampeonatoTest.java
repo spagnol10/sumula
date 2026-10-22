@@ -28,14 +28,20 @@ class FluxoDoCampeonatoTest {
 	@Autowired
 	MockMvcTester mvc;
 
+	/** Chave enviada nas requisições de escrita; cada teste define a sua. */
+	private String chave;
+
 	@Test
 	void doCadastroAClassificacao() throws Exception {
 		MvcTestResult criado = post("/api/v1/campeonatos", """
 				{"nome": "Copa da Vila"}""");
-		assertThat(criado).hasStatus(HttpStatus.CREATED).bodyJson().extractingPath("$.status")
+		assertThat(criado).hasStatus(HttpStatus.CREATED).bodyJson().extractingPath("$.campeonato.status")
 			.isEqualTo("INSCRICOES_ABERTAS");
-		assertThat(criado).bodyJson().extractingPath("$.slug").asString().startsWith("copa-da-vila-");
-		String id = ler(criado, "$.id");
+		assertThat(criado).bodyJson().extractingPath("$.campeonato.slug").asString().startsWith("copa-da-vila-");
+		String id = ler(criado, "$.campeonato.id");
+		chave = ler(criado, "$.chaveOrganizador");
+		String slug = ler(criado, "$.campeonato.slug");
+		assertThat(get("/api/v1/campeonatos/slug/" + slug)).hasStatusOk().bodyJson().extractingPath("$.id").isEqualTo(id);
 
 		for (String time : List.of("Unidos da Vila", "Real Várzea", "Juventude do Morro", "Estrela FC")) {
 			assertThat(post("/api/v1/campeonatos/" + id + "/times", "{\"nome\": \"" + time + "\"}"))
@@ -68,8 +74,10 @@ class FluxoDoCampeonatoTest {
 
 	@Test
 	void naoIniciaDuasVezes() throws Exception {
-		String id = ler(post("/api/v1/campeonatos", """
-				{"nome": "Torneio Relâmpago", "idaEVolta": true}"""), "$.id");
+		MvcTestResult criado = post("/api/v1/campeonatos", """
+				{"nome": "Torneio Relâmpago", "idaEVolta": true}""");
+		String id = ler(criado, "$.campeonato.id");
+		chave = ler(criado, "$.chaveOrganizador");
 		post("/api/v1/campeonatos/" + id + "/times", "{\"nome\": \"A\"}");
 		post("/api/v1/campeonatos/" + id + "/times", "{\"nome\": \"B\"}");
 
@@ -78,6 +86,33 @@ class FluxoDoCampeonatoTest {
 
 		await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> assertThat(get("/api/v1/campeonatos/" + id + "/partidas"))
 			.bodyJson().extractingPath("$.length()").isEqualTo(2));
+	}
+
+	@Test
+	void alteracoesExigemAChaveDoOrganizador() throws Exception {
+		MvcTestResult criado = post("/api/v1/campeonatos", """
+				{"nome": "Copa Protegida"}""");
+		String id = ler(criado, "$.campeonato.id");
+		String chaveCerta = ler(criado, "$.chaveOrganizador");
+
+		chave = null;
+		assertThat(post("/api/v1/campeonatos/" + id + "/times", "{\"nome\": \"Intruso\"}")).hasStatus(HttpStatus.FORBIDDEN);
+		chave = "chave-errada";
+		assertThat(post("/api/v1/campeonatos/" + id + "/iniciar", "")).hasStatus(HttpStatus.FORBIDDEN);
+		assertThat(post("/api/v1/campeonatos/" + id + "/chave/verificacao", "")).hasStatus(HttpStatus.FORBIDDEN);
+
+		chave = chaveCerta;
+		assertThat(post("/api/v1/campeonatos/" + id + "/chave/verificacao", "")).hasStatus(HttpStatus.NO_CONTENT);
+		post("/api/v1/campeonatos/" + id + "/times", "{\"nome\": \"A\"}");
+		post("/api/v1/campeonatos/" + id + "/times", "{\"nome\": \"B\"}");
+		post("/api/v1/campeonatos/" + id + "/iniciar", "");
+		await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> assertThat(get("/api/v1/campeonatos/" + id + "/partidas"))
+			.bodyJson().extractingPath("$.length()").isEqualTo(1));
+		String partidaId = ler(get("/api/v1/campeonatos/" + id + "/partidas"), "$[0].id");
+
+		chave = null;
+		assertThat(put("/api/v1/partidas/" + partidaId + "/resultado", """
+				{"golsMandante": 9, "golsVisitante": 0}""")).hasStatus(HttpStatus.FORBIDDEN);
 	}
 
 	@Test
@@ -96,11 +131,13 @@ class FluxoDoCampeonatoTest {
 	}
 
 	private MvcTestResult post(String uri, String json) {
-		return mvc.post().uri(uri).contentType(MediaType.APPLICATION_JSON).content(json).exchange();
+		var req = mvc.post().uri(uri).contentType(MediaType.APPLICATION_JSON).content(json);
+		return (chave == null ? req : req.header("X-Chave-Organizador", chave)).exchange();
 	}
 
 	private MvcTestResult put(String uri, String json) {
-		return mvc.put().uri(uri).contentType(MediaType.APPLICATION_JSON).content(json).exchange();
+		var req = mvc.put().uri(uri).contentType(MediaType.APPLICATION_JSON).content(json);
+		return (chave == null ? req : req.header("X-Chave-Organizador", chave)).exchange();
 	}
 
 	private static String ler(MvcTestResult resultado, String caminho) throws Exception {

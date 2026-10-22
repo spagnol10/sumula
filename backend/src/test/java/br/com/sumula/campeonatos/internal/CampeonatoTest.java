@@ -3,17 +3,29 @@ package br.com.sumula.campeonatos.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import br.com.sumula.compartilhado.AcessoNegadoException;
 import br.com.sumula.compartilhado.RegraDeNegocioException;
 import org.junit.jupiter.api.Test;
 
 class CampeonatoTest {
 
-	private final Campeonato campeonato = new Campeonato("  Copa da Vila ", "copa-da-vila-abc123", false);
+	private final Campeonato campeonato = new Campeonato("  Copa da Vila ", "copa-da-vila-abc123", false,
+			ChaveDeOrganizador.hash("segredo"));
 
 	@Test
 	void comecaComInscricoesAbertas() {
 		assertThat(campeonato.getNome()).isEqualTo("Copa da Vila");
 		assertThat(campeonato.getStatus()).isEqualTo(StatusCampeonato.INSCRICOES_ABERTAS);
+	}
+
+	@Test
+	void exigeAChaveDoOrganizador() {
+		campeonato.exigirOrganizador("segredo");
+
+		for (String invalida : new String[] { null, "", "outra" }) {
+			assertThatThrownBy(() -> campeonato.exigirOrganizador(invalida))
+				.isInstanceOf(AcessoNegadoException.class);
+		}
 	}
 
 	@Test

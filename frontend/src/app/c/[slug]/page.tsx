@@ -1,0 +1,48 @@
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { Cabecalho, Rodadas, TabelaDeClassificacao, TimesInscritos } from "@/components/campeonato";
+import { api, ApiError, type Campeonato } from "@/lib/api";
+
+/** Página pública do campeonato: o link que o organizador manda para os times. Só leitura. */
+export default function PaginaPublica({ params }: PageProps<"/c/[slug]">) {
+  return (
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10">
+      <Suspense fallback={<p className="text-zinc-500">Carregando campeonato…</p>}>
+        <Conteudo params={params} />
+      </Suspense>
+    </main>
+  );
+}
+
+async function Conteudo({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  let campeonato: Campeonato;
+  try {
+    campeonato = await api.buscarPorSlug(slug);
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) notFound();
+    throw e;
+  }
+
+  if (campeonato.status === "INSCRICOES_ABERTAS") {
+    return (
+      <>
+        <Cabecalho campeonato={campeonato} />
+        <p className="text-zinc-600 dark:text-zinc-400">Inscrições abertas. A tabela sai quando o organizador fechar as inscrições.</p>
+        <TimesInscritos campeonato={campeonato} />
+      </>
+    );
+  }
+
+  const [partidas, classificacao] = await Promise.all([
+    api.listarPartidas(campeonato.id),
+    api.classificacao(campeonato.id),
+  ]);
+  return (
+    <>
+      <Cabecalho campeonato={campeonato} />
+      <TabelaDeClassificacao linhas={classificacao} />
+      <Rodadas partidas={partidas} />
+    </>
+  );
+}
