@@ -21,6 +21,23 @@ suspensões calculadas sozinhas, e uma página pública para jogadores e torcida
 
 As decisões de arquitetura e seus porquês estão em [`docs/adr`](docs/adr).
 
+## API
+
+Documentação interativa em `http://localhost:8080/api/docs/ui` (OpenAPI em `/api/docs`).
+
+| Método | Rota | O que faz |
+|---|---|---|
+| `POST` | `/api/v1/campeonatos` | Cria um campeonato (pontos corridos, turno único ou ida e volta) |
+| `GET` | `/api/v1/campeonatos/{id}` | Detalhes e times inscritos |
+| `POST` | `/api/v1/campeonatos/{id}/times` | Inscreve um time |
+| `POST` | `/api/v1/campeonatos/{id}/iniciar` | Fecha as inscrições e dispara a geração da tabela |
+| `GET` | `/api/v1/campeonatos/{id}/partidas` | Tabela de jogos por rodada |
+| `PUT` | `/api/v1/partidas/{id}/resultado` | Lança ou corrige o placar |
+| `GET` | `/api/v1/campeonatos/{id}/classificacao` | Classificação com critérios de desempate |
+
+A tabela usa o método do círculo (Berger) com mando equilibrado e o mínimo teórico de jogos
+seguidos com o mesmo mando. Ver `GeradorDeTabela` e seus testes de propriedade.
+
 ## Rodando localmente
 
 Pré-requisitos: Java 21, Node 22 e Docker.
